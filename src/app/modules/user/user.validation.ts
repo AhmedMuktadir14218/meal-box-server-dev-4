@@ -2,36 +2,12 @@ import { z } from "zod";
 
 const userValidationSchema = z.object({
   body: z.object({
-    name: z
-      .string({
-        required_error: "Name is required and must be string",
-      })
-      .min(3)
-      .max(100),
-    email: z
-      .string({
-        required_error: "Email is required and must be string",
-      })
-      .email(),
-    password: z
-      .string({
-        required_error: "Password is required and must be string",
-      })
-      .min(8, { message: "Password must be minimum of 8 characters" })
-      .max(100, { message: "Password can not be more than 100 characters" })
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-        message:
-          "Password must contain at least one uppercase letter, one lowercase letter, and one number",
-      }),
-    role: z.enum(["customer", "provider"], {
-      required_error: "Role must be either customer or provider",
-    }),
+    name: z.string().min(3).max(100),
+    email: z.string().email(),
+    password: z.string().min(8).max(100).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/),
+    role: z.enum(["user", "customer", "provider", "admin"]).optional(), // Allow optional role
     phone: z.string().optional(),
-    address: z
-      .string()
-      .min(5, { message: "Address must be at least 5 characters long" })
-      .optional(),
-    photo: z.string().optional(),
+    address: z.string().min(5).optional(),
   }),
 });
 

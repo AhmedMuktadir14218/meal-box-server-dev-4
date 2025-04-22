@@ -5,7 +5,7 @@ import { verifyToken } from "../utils/jwt";
 import config from "../app/config";
 import { User } from "../app/modules/user/user.model";
 import { TUserRole } from "../app/modules/user/user.interface";
-
+import jwt from "jsonwebtoken";
 // Auth middleware to protect routes
 export const protect = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -17,11 +17,11 @@ export const protect = catchAsync(
       req.headers.authorization.startsWith("Bearer")
     ) {
       token = req.headers.authorization.split(" ")[1];
-    }
-    // Check cookies
-    else if (req.cookies.token) {
+    } else if (req.cookies && req.cookies.token) {
       token = req.cookies.token;
     }
+
+    console.log("Token received:", token); // Debugging line
 
     if (!token) {
       return res.status(401).json({
@@ -32,6 +32,7 @@ export const protect = catchAsync(
 
     // Verify token
     const decoded = verifyToken(token);
+    console.log("Decoded token:", decoded); // Debugging line
 
     // Check if user still exists
     const currentUser = await User.findById(decoded.id);
@@ -49,11 +50,10 @@ export const protect = catchAsync(
 );
 
 // Role-based authorization middleware
-const auth = (...requiredRoles: TUserRole[]) => {
+const auth = (...requiredRoles: string[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
 
-    // checking if the token is missing or not in Bearer format
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         status: "fail",
@@ -61,15 +61,10 @@ const auth = (...requiredRoles: TUserRole[]) => {
       });
     }
 
-    // Extract the token
     const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, config.jwt_secret) as { id: string; role: string };
 
-    // checking if the given token is valid
-    const decoded = verifyToken(token);
-
-    // checking if the user exists
     const user = await User.findById(decoded.id);
-
     if (!user) {
       return res.status(404).json({
         status: "fail",
@@ -77,18 +72,13 @@ const auth = (...requiredRoles: TUserRole[]) => {
       });
     }
 
-    // Check if user has required role
-    if (
-      requiredRoles.length &&
-      !requiredRoles.includes(user.role as TUserRole)
-    ) {
+    if (requiredRoles.length && !requiredRoles.includes(decoded.role)) {
       return res.status(403).json({
         status: "fail",
         message: "You do not have permission to perform this action",
       });
     }
 
-    // Set user to request
     req.user = {
       id: user._id.toString(),
       role: user.role,

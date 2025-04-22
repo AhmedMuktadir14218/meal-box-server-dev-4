@@ -10,6 +10,6 @@ export default {
   bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS || "12",
   client_url: process.env.FRONTEND_URL,
   jwt_secret: process.env.JWT_SECRET || "fallback_secret",
-  jwt_expires_in: process.env.JWT_EXPIRES_IN || "30d",
+  jwt_expires_in: process.env.JWT_EXPIRES_IN || "1h",
   cookie_expires_in: process.env.COOKIE_EXPIRES_IN || "30",
 };

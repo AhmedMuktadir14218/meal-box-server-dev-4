@@ -15,13 +15,9 @@ export const nextAuthProtect = catchAsync(
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
     ) {
-      // Extract user ID from token - in NextAuth session tokens, this might be
-      // structured differently based on your NextAuth configuration
       const token = req.headers.authorization.split(" ")[1];
 
       try {
-        // If you're using JWT strategy in NextAuth, you might need to decode the token
-        // We don't verify the token here as NextAuth already verified it
         const decodedData = JSON.parse(
           Buffer.from(token.split(".")[1], "base64").toString()
         );
@@ -32,11 +28,9 @@ export const nextAuthProtect = catchAsync(
           message: "Invalid authentication token",
         });
       }
-    }
-    // Check for nextauth.session-token cookie
-    else if (req.cookies["next-auth.session-token"]) {
-      // Here you would need to verify the NextAuth session
-      // This is simplified; in production, you might need to verify with NextAuth
+    } else if (req.cookies && req.cookies["next-auth.session-token"]) {
+      // Handle cookie-based authentication if applicable
+      // This part of the code should be robust to handle cases where cookies might not be present
       return res.status(501).json({
         status: "fail",
         message: "Cookie-based NextAuth authentication not implemented yet",
@@ -67,8 +61,7 @@ export const nextAuthProtect = catchAsync(
     };
 
     next();
-  }
-);
+  });
 
 // Role-based authorization middleware for NextAuth
 export const nextAuthRoleCheck = (...requiredRoles: string[]) => {
